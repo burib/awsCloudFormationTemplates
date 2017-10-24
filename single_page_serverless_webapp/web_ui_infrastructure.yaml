@@ -201,16 +201,9 @@ Outputs:
           - !Sub "dev.${DomainName}"          # dev.example.com           -> common developer environment
     Export:
           Name: !Sub "${ApplicationName}-s3-bucket-url-${Stage}"
-  S3BucketURL:
+  CloudFrontDomain:
     Description: |
-      Your CloudFront origin should point here
-      Import this value in an other CloudFormation stack or copy it manually.
-    Description: "Your CloudFront origin should point here"
-    Value: !Select [ 1, !Split [ 'http://', !GetAtt [ "HostingBucket", "WebsiteURL" ] ] ]
-    Export:
-          Name: !Sub "${ApplicationName}-s3-bucket-url-${Stage}"
-          # export names must be unique within a region per AWS account.
-          # You can't create cross-stack references across regions.
-          # ImportValue / Export function can't include Ref or GetAtt functions that depend on a resource.
-          # You can't delete a stack if another stack references one of its outputs
-          # You can't modify or remove an output value that is referenced by another stack.
+      The CloudFront domain name for your
+      domain that we can use to add a CNAME to
+      later.
+    Value: !GetAtt CloudFrontDistribution.DomainName
