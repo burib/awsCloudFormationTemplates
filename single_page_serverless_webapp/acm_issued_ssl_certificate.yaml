@@ -18,16 +18,10 @@ Resources:
   DomainCertificate:
     Type: 'AWS::CertificateManager::Certificate'
     Properties:
-      DomainName: !Join
-        - .
-        - - !Ref subDomainName
-          - !Ref DomainName
+      DomainName: !Sub "${subDomainName}.${DomainName}"
       DomainValidationOptions:
-        - DomainName: !Join
-            - .
-            - - !Ref subDomainName
-              - !Ref DomainName
-          ValidationDomain: !Ref DomainName
+        - DomainName: !Sub "${subDomainName}.${DomainName}"
+          ValidationDomain: !Sub "${DomainName}"
 Outputs:
   DomainCertificateArn:
     Description: |
