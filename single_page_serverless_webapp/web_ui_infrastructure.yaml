@@ -22,7 +22,7 @@ Parameters:
   ApplicationName:
     Type: "String"
     Description: "Name of the application"
-    #TODO: add validation. ( lowercase alphabets only )  
+    #TODO: add validation. ( lowercase alphabets only )
   APIPrefix:
     Type: "String"
     Description: |
@@ -138,7 +138,7 @@ Resources:
                 - "TLSv1.1"
                 - "TLSv1.2"
         CacheBehaviors:
-          - TargetOriginId: !Sub "${ApplicationName}-ui_APIOrigin"
+          - TargetOriginId: !Sub "${ApplicationName}-APIOrigin"
             PathPattern: !Sub "/api/${APIPrefix}*"
             AllowedMethods: [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
             DefaultTTL: 0
@@ -150,8 +150,7 @@ Resources:
                 Forward: "all"
               Headers:
                 - "authorization"
-                - "x-auth-token"
-                - "x-tenant-id"
+                - "x-api-key"
               QueryString: true
           - TargetOriginId: !Sub "${ApplicationName}_UIOrigin"
             # index.html contains references to files, for example app-2389nhf8932f.js
@@ -168,8 +167,7 @@ Resources:
                 Forward: "all"
               Headers:
                 - "authorization"
-                - "x-auth-token"
-                - "x-tenant-id"
+                - "x-api-key"
               QueryString: true
         DefaultCacheBehavior:
           TargetOriginId: !Sub "${ApplicationName}_UIOrigin"
@@ -191,7 +189,7 @@ Resources:
 Outputs:
   HostName:
     Description: "The domain where this stack is available at."
-    Value: 
+    Value:
       Fn::If:
         - "IsProduction"
         - !Sub "${DomainName}"                # example.com               -> production environment
