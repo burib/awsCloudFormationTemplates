@@ -138,7 +138,7 @@ Resources:
                 - "TLSv1.1"
                 - "TLSv1.2"
         CacheBehaviors:
-          - TargetOriginId: !Sub "${ApplicationName}-APIOrigin"
+          - TargetOriginId: !Sub "${ApplicationName}_APIOrigin"
             PathPattern: !Sub "/api/${APIPrefix}*"
             AllowedMethods: [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
             DefaultTTL: 0
