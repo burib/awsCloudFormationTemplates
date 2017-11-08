@@ -1,0 +1,114 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  UserPool:
+    Type: 'AWS::Cognito::UserPool'
+    Properties:
+      UserPoolName: myAwesomeUserPool
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+        UnusedAccountValidityDays: 90
+      AliasAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      MfaConfiguration: 'OFF'
+  UserPoolUser:
+    Type: 'AWS::Cognito::UserPoolUser'
+    Properties:
+      UserPoolId: !Ref UserPool
+      DesiredDeliveryMediums:
+        - EMAIL
+      ForceAliasCreation: false
+      UserAttributes:
+        - Name: email
+          Value: info@burib.net
+        - Name: name
+          Value: Balazs Buri
+      Username: burib
+  RestApi:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties:
+      Body:
+        swagger: '2.0'
+        info:
+          version: v1
+          title: testApi
+        basePath: /api
+        schemes:
+          - https
+        paths:
+          /api/v1/info:
+            get:
+              consumes:
+                - application/json
+              produces:
+                - application/json
+              responses:
+                '200':
+                  description: 200 response
+              security:
+                - ApiGateWayAuthorizer: []
+      Description: A test API
+  ApiGateWayAuthorizer:
+    Type: 'AWS::ApiGateway::Authorizer'
+    Properties:
+      Type: COGNITO_USER_POOLS
+      IdentitySource: method.request.header.authorization
+      Name: CognitoAuthorizer
+      ProviderARNs:
+        - !Join 
+          - ''
+          - - 'arn:aws:cognito-idp:'
+            - !Ref 'AWS::Region'
+            - ':'
+            - !Ref 'AWS::AccountId'
+            - ':userpool/'
+            - !Ref UserPool
+      RestApiId: !Ref RestApi
+    DependsOn:
+      - RestApi
+      - UserPool
+  LambdaExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: LambdaPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:Query'
+                  - 's3:GetObject'
+                Resource: '*'
+  LambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Code:
+        S3Bucket: testLambdaBucket
+        S3Key: test
+        S3ObjectVersion: v1
+        ZipFile: !Join 
+          - ''
+          - - var response = require('cfn-response');
+            - 'exports.handler = function(event, context) {'
+            - '  var input = parseInt(event.ResourceProperties.Input);'
+            - '  var responseData = {Value: input * 5};'
+            - '  response.send(event, context, response.SUCCESS, responseData);'
+            - '};'
+      FunctionName: apiLambdaFunction
+      Handler: index.handler
+      Role: !GetAtt 
+        - LambdaExecutionRole
+        - Arn
+      Runtime: nodejs6.10
+
+
